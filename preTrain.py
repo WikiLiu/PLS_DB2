@@ -5,11 +5,11 @@ import decimal
 import jpype
 
 # JDBC driver details
-driver = 'com.ibm.db2.jcc.DB2Driver'
-url = 'jdbc:db2://10.160.64.71:50000/hotmill'
+driver = 'com.ibm.PLS_DB2.jcc.DB2Driver'
+url = 'jdbc:PLS_DB2://10.160.64.71:50000/hotmill'
 user = 'ap'
 password = 'baosight@1780'
-jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.db2/jcc-11.5.0.0.jar'
+jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.PLS_DB2/jcc-11.5.0.0.jar'
 # Open database connection
 conn = jaydebeapi.connect(driver, url, [user, password], jar_file)
 # Execute the query
