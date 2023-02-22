@@ -1,16 +1,32 @@
-import pandas as pd
+ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+from sklearn import cross_decomposition, model_selection, preprocessing
 
 df = pd.read_csv("output.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 
 df = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
+X_small = df.drop(["DELTA_THICK_7", "STRIP_NO_6"], axis=1)
+
+# x_scaled = preprocessing.normalize(X_small)
+
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
+
+# 创建MinMaxScaler对象
+scaler = StandardScaler()
+
+# 对数据进行0-1归一化
+X_small = scaler.fit_transform(X_small)
 
 
 
-X = df.drop(["DELTA_THICK_7","STRIP_NO_6"],axis=1)
+names = df.columns.values
+
+index = list(names).index("FET_ACT_TEMP_7")
+FET_ACT_TEMP_7 = X_small[index]
+
+
 y = df["DELTA_THICK_7"]
 
 
@@ -52,13 +68,12 @@ with open("keep_feature.txt",'w') as f:
 keep_feature = keep_feature[0:-1]
 df = df[keep_feature]
 
-
 from sklearn.linear_model import LinearRegression
 import numpy as np
 
 # 创建并拟合线性回归模型
 model = LinearRegression(fit_intercept=True)
-model.fit(X, y)
+model.fit(X_small, y)
 
 # 输出模型的参数（系数）和截距
 print('Coefficients:', model.coef_)

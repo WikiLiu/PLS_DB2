@@ -5,11 +5,11 @@ import decimal
 import jpype
 
 # JDBC driver details
-driver = 'com.ibm.PLS_DB2.jcc.DB2Driver'
-url = 'jdbc:PLS_DB2://10.160.64.84:50000/hotmill'
+driver = 'com.ibm.db2.jcc.DB2Driver'
+url = 'jdbc:db2://10.160.64.254:50000/hotmill'
 user = 'ap'
 password = 'baosight@1780'
-jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.PLS_DB2/jcc-11.5.0.0.jar'
+jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.db2/jcc-11.5.0.0.jar'
 # Open database connection
 conn = jaydebeapi.connect(driver, url, [user, password], jar_file)
 # Execute the query
@@ -59,7 +59,7 @@ def LSAT_DELTA_TEMP(strip_no):
 
 def query_one(strip_no):
     df = []
-    f = open("QueryCalPost.sql","r")
+    f = open("QueryToc.sql","r")
     sql = f.read().replace("INPUT%%INPUT", str(int(strip_no)))
     df_data = search(sql)
     df_data = df_data.drop(labels=["ROLLGAP_OILROLL"], axis=1)
@@ -122,17 +122,13 @@ def query_one(strip_no):
 
     return dfComplie
 
-
-
-
-
 strip_no = '220206104400'
 df = query_one(strip_no)
 # Write the results to a CSV file
 df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 
 
-df.to_csv("output.csv")
+df.to_csv("output_time.csv")
 
 # Close the database connection
 conn.close()

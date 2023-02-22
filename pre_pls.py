@@ -6,91 +6,106 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.metrics import mean_absolute_error
 
 
-df = pd.read_csv("output_pre.csv", index_col=0)
+df = pd.read_csv("output.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 
 df = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 
+id_to_match = "220206104400"
+matched_rows = df.query(f'STRIP_NO_6 == ' + id_to_match)
+# error = df.query(f'DELTA_THICK_7 > ' + "0.1" + " | DELTA_THICK_7 < -0.1")
+# df = df.drop(error.index)
+df = pd.concat([df.drop(matched_rows.index), matched_rows])
 
+# # 获取最后一行数据
+# last_row = df.iloc[[-1]]
+#
+# # 打乱数据，不包括最后一行
+# df = df.iloc[:-1].sample(frac=1, random_state=123).reset_index(drop=True)
+#
+# # 将最后一行数据添加到最后
+# df = pd.concat([df, last_row], axis=0).reset_index(drop=True)
 
 X = df.drop(["DELTA_THICK_7","STRIP_NO_6"],axis=1)
-Y = df["DELTA_THICK_7"]
+# 计算所有特征和第一列的皮尔逊相关系数
+corr_matrix = X.corr(method='pearson')
 
+# 排序并选择相关性前30的特征
+top30_features = corr_matrix.iloc[1:, 0].abs().sort_values(ascending=False).index[:30]
+
+# 删除不需要的特征
+X = X[top30_features]
+
+# 输出处理后的数据
+print(df.head())
+
+
+
+
+Y = df["DELTA_THICK_7"]
+Y = np.array(Y)
 
 
 
 # 导入数据并进行均值方差归一化
 X_scaled = preprocessing.scale(X)
-# Y_scaled = preprocessing.scale(Y)
+Y_scaled = preprocessing.scale(Y)
 
 # 打乱顺序
-X_shuffle, Y_shuffle = shuffle(X_scaled, Y, random_state=0)
+# X_shuffle, Y_shuffle = shuffle(X_scaled, Y, random_state=0)
 
 # 划分训练集和测试集
-X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X_shuffle, Y_shuffle, test_size=0.3, random_state=0)
+# X_train, X_test, Y_train, Y_test = model_selection.train_test_split(X_scaled, Y, test_size=0.3)
 
 # 定义偏最小二乘回归模型
 pls = PLSRegression(scale=True)
 
 # 交叉验证选择最佳的组分数量
-n_components = np.arange(1, 21)
+n_ = np.arange(3, 4)
+opt_n_components = 0
 scores = []
-for n in n_components:
-    pls.set_params(n_components=n)
-    score = model_selection.cross_val_score(pls, X_train, Y_train, cv=10, scoring='neg_mean_absolute_error')
-    scores.append(-score.mean())
-best_n = n_components[np.argmin(scores)]
+spe = []
+for n in n_:
+    pls = PLSRegression(n_components=n)
+    pls.fit(X_scaled, Y_scaled )
+    Y_pre = pls.predict(X_scaled).squeeze()
+    spe = abs(Y_pre - Y_scaled )**2
+    # if spe[-1] == max(spe):
+    #     opt_n_components = n
+    #     break
+    # else:
+    #     continue
 
-# 使用最佳的组分数量训练模型
-pls.set_params(n_components=best_n)
-pls.fit(X_train, Y_train)
-
-# 预测测试集结果
-Y_pred = pls.predict(X_test)
-
-# 计算预测精度
-score = -mean_absolute_error(Y_test, Y_pred)
-print('偏最小二乘模型预测精度（L1 loss）：', score,best_n)
-
+# 找到最大值的索引
+max_index = np.argmax(spe)
+# 将最大值从数组中取出
+max_value = spe[max_index]
+# 将最大值从原数组中删除
+arr = np.concatenate([spe[:max_index], spe[max_index+1:]])
+# 将最大值放到数组最后
+arr = np.append(arr, max_value)
+print(arr)
 import matplotlib.pyplot as plt
-plt.scatter( Y_pred, Y_test)
+plt.plot(arr)
 plt.show()
 
+# # 计算SPE和T2统计量
+# X_scores, Y_scores = pls.transform(X, Y)
+# SPE = np.sum((X - np.dot(X_scores, pls.x_weights_.T)) ** 2, axis=1)
+# T2 = np.sum((X_scores / np.sqrt(np.sum(X_scores ** 2, axis=0))) ** 2, axis=1)
+#
+# # 打印SPE和T2统计量
+# print("SPE统计量：", SPE)
+# print("T2统计量：", T2)
 
 
 
 
 
 
-
-from sklearn.model_selection import GridSearchCV
-from sklearn.cross_decomposition import PLSRegression
-
-# 定义参数范围
-param_grid = {'n_components': [2, 3, 4, 5],
-              'scale': [True, False],
-              'max_iter': [100, 200, 300],
-              'tol': [1e-3, 1e-4, 1e-5],
-              'copy': [True, False]}
 
 # 初始化模型和网格搜索
-pls = PLSRegression()
-grid_search = GridSearchCV(pls, param_grid, cv=5, scoring='neg_mean_squared_error')
 
-# 在训练集上进行网格搜索
-grid_search.fit(X_train, Y_train)
-
-# 打印最佳超参数和最佳交叉验证得分
-print('Best parameters:', grid_search.best_params_)
-print('Best CV score:', -grid_search.best_score_)
-
-# 使用最佳超参数重新训练模型并预测测试集
-best_pls = grid_search.best_estimator_
-Y_pred = best_pls.predict(X_test)
-
-# 计算预测精度
-score = -mean_absolute_error(Y_test, Y_pred)
-print('L1 loss:', score)
 
 
 
