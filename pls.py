@@ -1,4 +1,4 @@
- import pandas as pd
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import cross_decomposition, model_selection, preprocessing
