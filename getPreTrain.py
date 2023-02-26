@@ -5,11 +5,11 @@ import decimal
 import jpype
 
 # JDBC driver details
-driver = 'com.ibm.PLS_DB2.jcc.DB2Driver'
-url = 'jdbc:PLS_DB2://10.160.64.71:50000/hotmill'
+driver = 'com.ibm.db2.jcc.DB2Driver'
+url = 'jdbc:db2://10.160.64.254:50000/hotmill'
 user = 'ap'
 password = 'baosight@1780'
-jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.PLS_DB2/jcc-11.5.0.0.jar'
+jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.db2/jcc-11.5.0.0.jar'
 # Open database connection
 conn = jaydebeapi.connect(driver, url, [user, password], jar_file)
 # Execute the query
@@ -122,7 +122,7 @@ def query_one(strip_no):
     return dfComplie
 
 
-strip_no = 220153200500
+strip_no = 220199004300
 f = open("queryAll.sql","r")
 sql = f.read().replace("INPUT%%INPUT", str(int(strip_no)))
 df_data = search(sql)
@@ -138,7 +138,7 @@ for index,strip_no in enumerate(df_data.values):
         df_all = df
     else:
         df_all = pd.concat([df_all,df])
-df_all.to_csv("output_pre.csv")
+df_all.to_csv("output_pre220199004300.csv")
 
 # Close the database connection
 conn.close()

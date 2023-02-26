@@ -59,7 +59,7 @@ def LSAT_DELTA_TEMP(strip_no):
 
 def query_one(strip_no):
     df = []
-    f = open("QueryToc.sql","r")
+    f = open("QueryCalPost.sql","r")
     sql = f.read().replace("INPUT%%INPUT", str(int(strip_no)))
     df_data = search(sql)
     df_data = df_data.drop(labels=["ROLLGAP_OILROLL"], axis=1)
@@ -122,13 +122,13 @@ def query_one(strip_no):
 
     return dfComplie
 
-strip_no = '220206104400'
+strip_no = '220199004300'
 df = query_one(strip_no)
 # Write the results to a CSV file
 df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 
 
-df.to_csv("output_time.csv")
+df.to_csv("output_time220199004300.csv")
 
 # Close the database connection
 conn.close()
