@@ -6,12 +6,12 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.metrics import mean_absolute_error
 
 
-df = pd.read_csv("output.csv", index_col=0)
+df = pd.read_csv("output220199300200.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 
 df = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 
-id_to_match = "220206104400"
+id_to_match = "220199300200"
 matched_rows = df.query(f'STRIP_NO_6 == ' + id_to_match)
 # error = df.query(f'DELTA_THICK_7 > ' + "0.1" + " | DELTA_THICK_7 < -0.1")
 # df = df.drop(error.index)

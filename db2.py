@@ -6,7 +6,7 @@ import jpype
 
 # JDBC driver details
 driver = 'com.ibm.db2.jcc.DB2Driver'
-url = 'jdbc:db2://10.160.64.254:50000/hotmill'
+url = 'jdbc:db2://10.160.64.164:50000/hotmill'
 user = 'ap'
 password = 'baosight@1780'
 jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.db2/jcc-11.5.0.0.jar'
@@ -122,13 +122,13 @@ def query_one(strip_no):
 
     return dfComplie
 
-strip_no = '220199004300'
+strip_no = '220195003500'
 df = query_one(strip_no)
 # Write the results to a CSV file
 df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 
 
-df.to_csv("output_time220199004300.csv")
+df.to_csv("output220195003500.csv")
 
 # Close the database connection
 conn.close()

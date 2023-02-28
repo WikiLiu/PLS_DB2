@@ -6,7 +6,7 @@ import jpype
 
 # JDBC driver details
 driver = 'com.ibm.db2.jcc.DB2Driver'
-url = 'jdbc:db2://10.160.64.164:50000/hotmill'
+url = 'jdbc:db2://10.160.64.254:50000/hotmill'
 user = 'ap'
 password = 'baosight@1780'
 jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.db2/jcc-11.5.0.0.jar'
@@ -59,7 +59,7 @@ def LSAT_DELTA_TEMP(strip_no):
 
 def query_one(strip_no):
     df = []
-    f = open("queryOne.sql","r")
+    f = open("QueryToc.sql","r")
     sql = f.read().replace("INPUT%%INPUT", str(int(strip_no)))
     df_data = search(sql)
     df_data = df_data.drop(labels=["ROLLGAP_OILROLL"], axis=1)
@@ -119,34 +119,17 @@ def query_one(strip_no):
             water_flow += row["WATER_FLOW"]
             water_delta += row["DELTA_WATER"]
     print("ok")
+
     return dfComplie
 
+strip_no = '220156000100'
+df = query_one(strip_no)
+# Write the results to a CSV file
+df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 
-strip_no = 220156000100
-f = open("queryAll.sql","r")
-sql = f.read().replace("INPUT%%INPUT", str(int(strip_no)))
-df_data = search(sql)
 
-
-df_all = []
-for index,strip_no in enumerate(df_data.values):
-    df = query_one(strip_no)
-    # Write the results to a CSV file
-    df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
-    if(len(df_all)>1000):
-        break
-    if(index == 0):
-        df_all = df
-    else:
-        df_all = pd.concat([df_all,df])
-df_all.to_csv("output_pre"+strip_no+".csv")
+df.to_csv("output_time220156000100.csv")
 
 # Close the database connection
 conn.close()
-
-
-
-
-
-
 

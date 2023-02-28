@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.model_selection import KFold
 
-df = pd.read_csv("output.csv", index_col=0)
+df = pd.read_csv("output220206104400.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 data_small = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 X_small = data_small.drop(["DELTA_THICK_7", "STRIP_NO_6"], axis=1)

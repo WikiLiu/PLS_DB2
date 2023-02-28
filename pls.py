@@ -1,91 +1,40 @@
 import pandas as pd
 import numpy as np
+from sklearn.cross_decomposition import PLSRegression
 import matplotlib.pyplot as plt
 from sklearn import cross_decomposition, model_selection, preprocessing
+from sklearn.preprocessing import MinMaxScaler,StandardScaler
 
-df = pd.read_csv("output.csv", index_col=0)
+df = pd.read_csv("output220206104400.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 
 df = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 X_small = df.drop(["DELTA_THICK_7", "STRIP_NO_6"], axis=1)
-
-# x_scaled = preprocessing.normalize(X_small)
-
-from sklearn.preprocessing import MinMaxScaler,StandardScaler
-
-# 创建MinMaxScaler对象
 scaler = StandardScaler()
-
 # 对数据进行0-1归一化
 X_small = scaler.fit_transform(X_small)
-
-
-
-names = df.columns.values
-
-index = list(names).index("FET_ACT_TEMP_7")
-FET_ACT_TEMP_7 = X_small[index]
-
-
-y = df["DELTA_THICK_7"]
-
-
-cor = df.corr()
-cor_target = (cor["DELTA_THICK_7"])
-cor_name = df.columns.tolist()
-cor_data = cor_target.values
-# 将一维数据转化为二维数据
-cor_data = cor_data.reshape((1, -1))
-# 绘制热力图
-fig, ax = plt.subplots()
-im = ax.imshow(cor_data, cmap='hot', interpolation='nearest')
-# 设置横轴和纵轴的显示范围
-ax.set_xlim(0, len(cor_data[0]))
-ax.set_ylim(0, 1)
-# 隐藏横轴和纵轴
-ax.set_xticks([])
-ax.set_yticks([])
-# 添加颜色条
-cbar = ax.figure.colorbar(im, ax=ax)
-plt.show()
-
-#Correlation with output variable
-
-#Selecting highly correlated features
-cor_target.sort_values(ascending=False)
-
-pd.DataFrame(cor_target).columns.values.tolist()
-relevant_features = cor_target.sort_values()
-print(relevant_features)
-
-keep_feature = []
-with open("keep_feature.txt",'w') as f:
-    for i, v in relevant_features.iteritems():
-        if(abs(v)>0.1):
-            f.write(i+"\n")
-            keep_feature.append(i)
-
-keep_feature = keep_feature[0:-1]
-df = df[keep_feature]
-
-from sklearn.linear_model import LinearRegression
-import numpy as np
-
+names = list(df)
+y = df["DELTA_THICK_7"].values
 # 创建并拟合线性回归模型
-model = LinearRegression(fit_intercept=True)
+model = PLSRegression(n_components=3)
 model.fit(X_small, y)
+spe = np.square(y - model.predict(X_small)).sum(axis=1)
+# 绘制带红点的折线图
+fig, ax = plt.subplots()
+ax.plot(spe, 'b-')
+ax.scatter(range(len(spe)), spe, c='r')
 
-# 输出模型的参数（系数）和截距
-print('Coefficients:', model.coef_)
-print('Intercept:', model.intercept_)
+# 获取回归系数矩阵
+coef = model.coef_
 
-# 计算自变量的重要度评分
-importance_scores = np.abs(model.coef_) / np.sum(np.abs(model.coef_))
-cor_name[1:-1]
+# 计算某一个样本在所有维度上对特征的贡献值
+sample = X_small[-1,:].reshape(-1,1)
+contributions = np.multiply(sample.reshape(43), coef.reshape(43))
 
-for i in range(44):
-    print([str(cor_name[i]) + ":" + str(importance_scores[i])    ])
-print('Importance scores:', importance_scores)
-
-
+# 对数据进行排序并获取索引
+idx = np.argsort(contributions)[::-1]
+# 根据索引重新排列names
+sorted_names = [names[i] for i in idx]
+# 打印排序后的names
+print(sorted_names)
 print("ok")

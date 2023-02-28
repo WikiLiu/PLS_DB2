@@ -3,7 +3,7 @@ import numpy as np
 from sklearn import cross_decomposition, model_selection, preprocessing
 import pandas as pd
 # 生成示例数据
-df = pd.read_csv("output.csv", index_col=0)
+df = pd.read_csv("output220206104400.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 data_small = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
 X_small = data_small.drop(["DELTA_THICK_7", "STRIP_NO_6"], axis=1).values

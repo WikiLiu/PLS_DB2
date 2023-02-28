@@ -6,7 +6,7 @@ from sklearn.cross_decomposition import PLSRegression
 from sklearn.metrics import mean_absolute_error
 
 
-df = pd.read_csv("output.csv", index_col=0)
+df = pd.read_csv("output220206104400.csv", index_col=0)
 df = df[[col for col in df.columns if col != 'DELTA_THICK_7'] + ['DELTA_THICK_7']]
 
 df = df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
