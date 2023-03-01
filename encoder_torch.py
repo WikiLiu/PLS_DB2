@@ -18,7 +18,8 @@ X = data_big.drop(["STRIP_NO_6"], axis=1)
 names = list(X)
 X_= preprocessing.scale(X)
 # 加载数据集
-train_data = X_
+train_data = X_[0:int(X_.shape[0]*0.7),:]
+test_data = X_[int(X_.shape[0]*0.7):,:]
 
 import torch
 from torch import nn, optim
@@ -54,30 +55,54 @@ class MyDataset(Dataset):
 # 训练集
 train_dataset = MyDataset(train_data)
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-
 # 定义模型、损失函数和优化器
 model = AutoEncoder(input_dim = len(names))
 criterion = nn.MSELoss()
+test_criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
+lambda_l1 = 0.01
+lambda_l2 = 0.01
+sample = torch.from_numpy(test_data).float()
 # 训练模型
+train_corr = []
+test_corr = []
+scored = 0.0
 for epoch in range(100):
     running_loss = 0.0
+    model.train()
     for i, data in enumerate(train_loader, 0):
         inputs = data.float()
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, inputs)
+        #正则化参数
+        l1_reg = torch.tensor(0.)
+        l2_reg = torch.tensor(0.)
+        for param in model.parameters():
+            l1_reg += torch.norm(param, 1)
+            l2_reg += torch.norm(param, 2)
+        loss += lambda_l1 * l1_reg + lambda_l2 * l2_reg
+
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
+    model.eval()
+    train_corr.append(running_loss / len(train_loader))
     print('[%d] loss: %.3f' % (epoch + 1, running_loss / len(train_loader)))
+    X_pred = model(sample)
+    scored = test_criterion(X_pred,sample).detach().numpy().item()
+    test_corr.append(scored)
+    print(f"大数据集测试集精度：{scored}")
 
-sample = torch.from_numpy(train_data).float()
-X_pred = model(sample)
+data = [['train', 'test']] + [[train_corr[i], test_corr[i]] for i in range(len(test_corr))]
+import csv
+# 写入CSV文件
+with open('r_L1_l2.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(data)
 
+exit()
 
-
-scored = np.mean((X_pred.detach().numpy()-train_data), axis = 1)
 plt.figure()
 sns.distplot(scored,
              bins = 10,
