@@ -31,12 +31,14 @@ class AutoEncoder(nn.Module):
         super(AutoEncoder, self).__init__()
         self.encoder = nn.Sequential(
             nn.Linear(input_dim, 64),
+            nn.Dropout(0.1),
             nn.ReLU(),
             nn.Linear(64, encoding_dim),
             nn.ReLU()
         )
         self.decoder = nn.Sequential(
             nn.Linear(encoding_dim, 64),
+            nn.Dropout(0.1),
             nn.ReLU(),
             nn.Linear(64, input_dim)
         )
@@ -60,8 +62,8 @@ model = AutoEncoder(input_dim = len(names))
 criterion = nn.MSELoss()
 test_criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
-lambda_l1 = 0.01
-lambda_l2 = 0.01
+lambda_l1 = 0.001
+lambda_l2 = 0.001
 sample = torch.from_numpy(test_data).float()
 # 训练模型
 train_corr = []
@@ -75,13 +77,13 @@ for epoch in range(100):
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, inputs)
-        #正则化参数
+        # 正则化参数
         l1_reg = torch.tensor(0.)
         l2_reg = torch.tensor(0.)
         for param in model.parameters():
             l1_reg += torch.norm(param, 1)
             l2_reg += torch.norm(param, 2)
-        loss += lambda_l1 * l1_reg + lambda_l2 * l2_reg
+        loss += l1_reg*lambda_l1 + lambda_l2 * l2_reg
 
         loss.backward()
         optimizer.step()
@@ -97,7 +99,7 @@ for epoch in range(100):
 data = [['train', 'test']] + [[train_corr[i], test_corr[i]] for i in range(len(test_corr))]
 import csv
 # 写入CSV文件
-with open('r_L1_l2.csv', 'w', newline='') as f:
+with open('r_L1_l2_drop.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(data)
 
