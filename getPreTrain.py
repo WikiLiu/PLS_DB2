@@ -9,7 +9,7 @@ driver = 'com.ibm.db2.jcc.DB2Driver'
 url = 'jdbc:db2://10.160.64.164:50000/hotmill'
 user = 'ap'
 password = 'baosight@1780'
-jar_file = '/mnt/c/Users/wiki/AppData/Roaming/DBeaverData/drivers/maven/maven-central/com.ibm.db2/jcc-11.5.0.0.jar'
+jar_file = '/home/liuweiji/python/PLS_DB2/driver/jcc-11.5.0.0.jar'
 # Open database connection
 conn = jaydebeapi.connect(driver, url, [user, password], jar_file)
 # Execute the query
@@ -69,8 +69,10 @@ def query_one(strip_no):
 
     row = []
     namesN = []
+    names1 = ['ENTRY_THICK']
+    names5 = ['DELTA_ZEROPOINT']
     names6 = ['STRIP_NO','STAND_NO', 'CORR_FORCE_STAND', 'DETAL_FORCE_CAL', 'DETAL_FORCE_POST',
-              'KM', 'TEMP_DELTA', 'TEMP_CORR', 'GAP_DELTA', 'CORR_ZEROPOINT_USE', 'MILLSTRETCH_ROLL',
+              'DELTA_REDU', 'TEMP_DELTA', 'TEMP_CORR', 'GAP_DELTA', 'DELTA_ZEROPOINT', 'MILLSTRETCH_ROLL',
               'DELTA_MILL', 'ENTRY_TENSION']
     names7 = ['STAND_NO', 'FORCE_ACT', 'CORR_FORCE_STAND', 'CORR_FORCE_DELTA', 'DETAL_FORCE_CAL',
               'DETAL_FORCE_POST', 'DELTA_SPEED', 'DELTA_REDU', 'STRIP_WIDTH', 'ROLL_DIAM', 'KM',
@@ -78,10 +80,14 @@ def query_one(strip_no):
               'DESC_SUM', 'GAP_DELTA', 'CORR_ZEROPOINT_USE', 'DELTA_ZEROPOINT', 'MILLSTRETCH_ROLL',
               'DELTA_MILL', 'ENTRY_THICK', 'ROLLWEAR', 'ENTRY_TENSION',
               'BEND_FORCE','DELTA_THICK']
+    names1compile = [name + "_1" for name in names1]
+    names5compile = [name + "_5" for name in names5]
     names6compile = [name + "_6" for name in names6]
     names7compile = [name + "_7" for name in names7]
     otherComplie = ["WATER_FLOW","DELTA_WATER","BEAT","INDEX_ROLL","DELTA_CLASS","LSAT_DELTA_TEMP"]
     # 创建一个空的 DataFrame  .append(names7compile)
+    names1compile += names5compile
+    names6compile = names1compile + names6compile
     names6compile += names7compile
     names6compile += otherComplie
 
@@ -95,7 +101,6 @@ def query_one(strip_no):
             df += list(row[names6])
             water_flow += row["WATER_FLOW"]
             water_delta += row["DELTA_WATER"]
-
         elif row["STAND_NO"] == 7.0:
 
             water_flow += row["WATER_FLOW"]
@@ -116,30 +121,29 @@ def query_one(strip_no):
             water_flow = 0
             water_delta = 0
         else:
+            if row["STAND_NO"] == 1.0:
+                df+= list(row[names1])
+            if row["STAND_NO"] == 5.0:
+                df+= list(row[names5])
             water_flow += row["WATER_FLOW"]
             water_delta += row["DELTA_WATER"]
-    print("ok")
     return dfComplie
 
-
-strip_no = 220156000100
+strip_no_o = 220195003500
 f = open("queryAll.sql","r")
-sql = f.read().replace("INPUT%%INPUT", str(int(strip_no)))
+sql = f.read().replace("INPUT%%INPUT", str(int(strip_no_o)))
 df_data = search(sql)
 
-
-df_all = []
 for index,strip_no in enumerate(df_data.values):
     df = query_one(strip_no)
+    print(f"get:{strip_no}\n")
     # Write the results to a CSV file
     df.drop(["STAND_NO_6","STAND_NO_7"],axis=1)
-    if(len(df_all)>1000):
-        break
     if(index == 0):
-        df_all = df
+        df.to_csv("output_pre"+str(strip_no_o)+".csv")
     else:
-        df_all = pd.concat([df_all,df])
-df_all.to_csv("output_pre"+strip_no+".csv")
+        df.to_csv("output_pre"+str(strip_no_o)+".csv", mode='a', header=False)
+# Close the database connection
 
 # Close the database connection
 conn.close()
